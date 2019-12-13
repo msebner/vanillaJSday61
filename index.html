@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Toggle Timer</title>
+
+	<style type="text/css">
+		body {
+			margin: 1em auto;
+			max-width: 40em;
+			text-align: center;
+			width: 88%;
+		}
+	</style>
+</head>
+<body>
+
+	<h1>Toggle Timer</h1>
+
+	<div id="app"></div>
+
+	<!-- New always-present buttons -->
+	<button id='toggleTimer' data-start-pause>Pause</button>
+
+	<button data-restart-timer>Restart</button>
+
+	<script>
+		
+		//IIFE
+		(function(){
+
+		//
+		// Variables
+		//
+
+		var duration = 120;
+
+		var app = document.querySelector('#app');
+
+		var toggleTimer = document.querySelector('#toggleTimer')
+
+		var countdown;
+
+		// Added paused property to data object
+		var data = {
+			timer : duration,
+			paused : false,
+			done : false
+		}
+
+		//
+		//Methods
+		//
+
+		// Format the duration to return MINUTE:SECONDS
+		var formatTime = function(currentDuration){
+			
+			// Calculate the number of minutes in duration
+			var minutes = parseInt(currentDuration / 60, 10);
+
+			// Calculate the number of seconds
+			var seconds = currentDuration % 60;
+
+			// Return the minutes and seconds, adding a 0 to any single digit seconds
+			return minutes + ':' + seconds.toString().padStart(2, '0');
+		};
+
+
+		var template = function(){
+
+			// Return the formatted time
+			return '<h1>' + formatTime(data.timer) + '</h1>';
+
+		};
+
+
+		var render = function(){
+
+			if(app.innerHTML === template()) return;
+
+			app.innerHTML = template();
+		};
+
+
+		// toggleTimer function checks value of data.paused, sets the appropriate button text and starts the timer when appropriate
+		var toggleTimer = function(){
+
+			if(data.paused){
+
+				data.paused = false;
+
+				toggleTimer.textContent = 'Pause';
+
+				startTimer(data.timer);
+
+			} else {
+
+				data.paused = true;
+
+				toggleTimer.textContent = 'Start';
+			}
+		};
+		
+
+		// startTimer now needs an argument so that on page load and on Restart we can set to 'duration', but in the toggleTimer function we can set to data.timer (the current count)
+		var startTimer = function(currentTime){
+
+			//Reset the data
+			data.timer = currentTime;
+
+			data.done = false;
+
+			data.paused = false;
+
+			render();
+			
+			countdown = window.setInterval(function(){
+
+				// Check if data.paised is true. If so, clearInterval and end the function
+				if(data.paused){
+
+					window.clearInterval(countdown);
+
+					return;
+				}
+
+				render();
+
+				var time = data.timer - 1;
+
+				var done = time === 0 ? true : false;
+
+				data.timer = time;
+
+				data.done = done;
+
+				render();
+
+				if(done){
+
+					window.clearInterval(countdown);
+				}
+
+			}, 1000);
+		};
+
+
+		//
+		//Inits and Event Listeners
+
+		startTimer(duration);
+
+		document.addEventListener('click', function(){
+
+			if(event.target.hasAttribute('data-restart-timer')){
+
+				// Must clearInterval before restarting the timer, otherwise you get funky results
+				window.clearInterval(countdown);
+
+				startTimer(duration);
+			}
+
+		}, false);
+		
+
+		// Eventlistener for the toggle button
+		document.addEventListener('click', function(){
+
+			if(event.target.hasAttribute('data-start-pause')){
+
+				toggleTimer();
+			}
+
+		}, false);
+
+})();
+	</script>
+</body>
+</html>
